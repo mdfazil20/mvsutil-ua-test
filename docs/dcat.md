@@ -6,7 +6,7 @@
 
 ## NAME
 
-`dcat` - Print out a non-VSAM dataset.
+`dcat` - Print out a non-VSAM.
 
 <br />
 
