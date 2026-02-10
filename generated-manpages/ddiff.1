@@ -1,0 +1,65 @@
+DDIFF(1)                      ZOAU Command Syntax                       DDIFF(1)
+
+NAME
+
+	ddiff - Compare two datasets (partitioned and sequential) matching one or more patterns.
+
+SYNOPSIS
+
+	ddiff [-dhiv] [-Q<tmphlq>] [-c<cols>] [-C<num>] [<dataset-pattern1>] [<dataset-pattern2>]
+
+	-c
+	    specify column comparison specifiers to pass to SUPERCE.
+
+	-C
+	    display <num> lines of context around a displayed line.
+
+	-d
+	    Print out debug messages.
+
+	-h
+	    Display syntax help.
+
+	-i
+	    Ignore case
+
+	-Q
+	    Use an alternative high-level qualifier (HLQ) for temporary dataset name.
+	    This will override the TMPHLQ environment variable.
+
+	-v
+	    Print out verbose command information.
+
+ENVIRONMENT VARIABLES
+
+	TMPHLQ
+	    overrides the current high-level qualifier used for temporary dataset name.
+
+DESCRIPTION
+
+	Compare two datasets to each other. The datasets can be specified using
+	standard wildcards and may be sequential, partitioned, or partitioned dataset
+	members.
+
+	ddiff supports generation dataset relative name notation when the name is
+	fully specified with no wildcard characters.
+
+	The -C and -i options behave in a consistent manner with diff.
+
+EXAMPLES
+
+	Compare 2 text files from columns 1 to 72
+
+		ddiff -c1:72 tstradm.data1.txt tstradm.data2.txt
+
+EXIT VALUES
+
+	0
+	    No differences between the files compared.
+
+	1
+	    ddiff compared the files and found them to be different.
+
+SEE ALSO
+
+	ddiff(1)

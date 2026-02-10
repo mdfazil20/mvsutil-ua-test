@@ -1,0 +1,77 @@
+A2E(1)                        ZOAU Command Syntax                       A2E(1)
+
+NAME
+
+	a2 - Convert file from ASCII to.
+
+SYNOPSIS
+
+	a2e [-dFhqv] [-f <source_codepage>] [-t <dest_codepage>] <FILE>
+
+	-d
+	    Print out debug messages.
+
+	-F
+	    Force conversion regardless of file tag.
+
+	-f <source_codepage>
+	    Specify the current code page. Default is ISO8859-1.
+
+	-h
+	    Display syntax help.
+
+	-q
+	    Quiet mode. Do not display warning messages.
+
+	-t <target_codepage>
+	    Specify the target code page. Default is ISO8859-1.
+
+	-v
+	    Print out verbose command information.
+
+DESCRIPTION
+
+	a2e converts and tags a file on disk from an ASCII code page to an EBCDIC
+	one. This command preserves file tags, permissions, and timestamps.
+
+	The command issues an error message if the file is already tagged as
+	the target code page.
+
+	The command issues a warning message when an untagged file is converted.
+	If a warning message appears, verify that the reencoding was performed
+	correctly.
+
+	When using -f or -t, specify the code page name.  Numeric code page
+	identifiers are not supported.
+
+EXAMPLES
+
+	Convert a file that is tagged as ISO8859-1 to IBM-1047:
+
+		a2e /home/myfile
+
+	Convert a file that is tagged as ISO8859-2 to IBM-037:
+
+		a2e -f ISO8859-2 -t IBM-037 /home/myfile
+
+	Force the conversion of a file that is tagged as binary:
+
+		a2e -F /home/mybinaryfile
+
+EXIT VALUES
+
+	0
+	    Conversion was successful.
+
+	2
+	    An untagged file was converted.
+
+	4
+	    Invalid syntax.
+
+	8
+	    Error converting the file.
+
+SEE ALSO
+
+	e2a(1)
