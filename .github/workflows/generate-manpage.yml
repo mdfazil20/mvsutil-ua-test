@@ -67,8 +67,8 @@ jobs:
         if: steps.changes.outputs.changed == 'true'
         run: |
           python scripts/md-to-manpage.py \
-            --input-dir docs \
-            --output-dir ./generated-manpages
+            docs \
+            ./generated-manpages
 
       # -----------------------------
       # Copy generated files into Repo-B
