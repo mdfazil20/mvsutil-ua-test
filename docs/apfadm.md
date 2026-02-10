@@ -6,7 +6,7 @@
 
 ## NAME
 
-`apfadm` - Authorized Program Facility (APF) administration utility.
+`apfadm` - Authorized Program Facility (APF) administration.
 
 <br />
 
