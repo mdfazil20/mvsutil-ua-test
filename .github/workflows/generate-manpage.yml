@@ -76,7 +76,7 @@ jobs:
       - name: Copy generated files
         if: steps.changes.outputs.changed == 'true'
         run: |
-          cp -r generated-manpages/*.1 docs/catgen1/
+          cp -r generated-manpages/*.1  repo-b/docs/catgen1/
 
       # -----------------------------
       # Commit & push changes
