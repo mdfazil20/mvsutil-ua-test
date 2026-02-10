@@ -45,7 +45,7 @@ jobs:
         if: steps.changes.outputs.changed == 'true'
         run: |
           git clone \
-            --branch dev \
+            --branch main \
             https://x-access-token:${{ secrets.REPO_B_TOKEN }}@github.com/mdfazil20/mvsutil-test \
             repo-b
 
