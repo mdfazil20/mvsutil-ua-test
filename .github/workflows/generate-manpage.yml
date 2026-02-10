@@ -1,0 +1,111 @@
+name: Generate Manpages and Raise PR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  manpage-pr:
+    runs-on: [self-hosted, linux]
+
+    steps:
+      # -----------------------------
+      # Checkout Repo-A
+      # -----------------------------
+      - name: Checkout Repo-A
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # -----------------------------
+      # Detect changed markdown files
+      # -----------------------------
+      - name: Get changed markdown files
+        id: changes
+        run: |
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
+            | grep '\.md$' > changed_files.txt || true
+
+          if [ ! -s changed_files.txt ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      # -----------------------------
+      # Clone Repo-B (latest dev)
+      # -----------------------------
+      - name: Clone Repo-B (dev branch)
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git clone \
+            --branch dev \
+            https://x-access-token:${{ secrets.REPO_B_TOKEN }}@github.com/mdfazil20/mvsutil-test \
+            repo-b
+
+      # -----------------------------
+      # Create feature branch in Repo-B
+      # -----------------------------
+      - name: Create feature branch
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          cd repo-b
+          BRANCH="auto/manpages-${{ github.run_id }}"
+          echo "BRANCH_NAME=$BRANCH" >> $GITHUB_ENV
+          git checkout -b "$BRANCH"
+
+      # -----------------------------
+      # Run generator script (FOLDER-BASED)
+      # -----------------------------
+      - name: Generate manpages
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          python scripts/generate_manpages.py \
+            --input-dir docs \
+            --output-dir ./generated-manpages
+
+      # -----------------------------
+      # Copy generated files into Repo-B
+      # -----------------------------
+      - name: Copy generated files
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          cp -r generated-manpages/*.1 mvsutil-test/docs/catgen1/
+
+      # -----------------------------
+      # Commit & push changes
+      # -----------------------------
+      - name: Commit and push changes
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          cd repo-b
+          git config user.name "MDFazil"
+          git config user.email "fakrudeenfazil@gmail.com"
+          git add .
+          git commit -m "Auto-generate manpages from Repo-A" || exit 0
+          git push origin "$BRANCH_NAME"
+
+      # -----------------------------
+      # Create PR to dev
+      # -----------------------------
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.REPO_B_TOKEN }}
+          repository: ORG/Repo-B
+          base: dev
+          head: ${{ env.BRANCH_NAME }}
+          title: "Auto-generated manpages"
+          body: |
+            This PR was automatically generated.
+
+            - Source: Repo-A main merge
+            - Generator: folder-based Python script
+            - Output: manpages (.1)
