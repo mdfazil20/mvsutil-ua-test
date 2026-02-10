@@ -6,7 +6,7 @@
 
 ## NAME
 
-`a2e` - Convert file from ASCII to Fazil.
+`a2` - Convert file from ASCII to Fazil.
 
 <br />
 
