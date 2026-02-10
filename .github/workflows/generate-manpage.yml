@@ -3,7 +3,7 @@ name: Generate Manpages and Raise PR
 on:
   push:
     branches:
-      - main
+      - main   # runs when Repo-A (mvsutil-ua-test) main changes
 
 jobs:
   manpage-pr:
@@ -11,13 +11,16 @@ jobs:
 
     steps:
       # -----------------------------
-      # Checkout Repo-A
+      # Checkout Repo-A (mvsutil-ua-test)
       # -----------------------------
       - name: Checkout Repo-A
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # -----------------------------
+      # Setup Python
+      # -----------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -26,7 +29,7 @@ jobs:
       # -----------------------------
       # Detect changed markdown files
       # -----------------------------
-      - name: Get changed markdown files
+      - name: Detect changed markdown files
         id: changes
         run: |
           git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
@@ -39,20 +42,29 @@ jobs:
           fi
 
       # -----------------------------
-      # Clone Repo-B (latest dev)
+      # Generate manpages (Repo-A only)
       # -----------------------------
-      - name: Clone Repo-B (dev branch)
+      - name: Generate manpages
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          python scripts/md-to-manpage.py \
+            --input docs \
+            --output generated-manpages
+
+      # -----------------------------
+      # Clone Repo-B (mvsutil-test)
+      # -----------------------------
+      - name: Clone Repo-B
         if: steps.changes.outputs.changed == 'true'
         run: |
           git clone \
-            --branch main \
-            https://x-access-token:${{ secrets.REPO_B_TOKEN }}@github.com/mdfazil20/mvsutil-test \
+            https://x-access-token:${{ secrets.REPO_B_TOKEN }}@github.com/mdfazil20/mvsutil-test.git \
             repo-b
 
       # -----------------------------
-      # Create feature branch in Repo-B
+      # Create branch in Repo-B
       # -----------------------------
-      - name: Create feature branch
+      - name: Create feature branch in Repo-B
         if: steps.changes.outputs.changed == 'true'
         run: |
           cd repo-b
@@ -61,51 +73,43 @@ jobs:
           git checkout -b "$BRANCH"
 
       # -----------------------------
-      # Run generator script (FOLDER-BASED)
+      # Copy manpages into Repo-B
       # -----------------------------
-      - name: Generate manpages
+      - name: Copy generated manpages to Repo-B
         if: steps.changes.outputs.changed == 'true'
         run: |
-          python scripts/md-to-manpage.py \
-          --input docs \
-          --output ./generated-manpages
+          mkdir -p repo-b/docs/catgen1
+          cp generated-manpages/*.1 repo-b/docs/catgen1/
 
       # -----------------------------
-      # Copy generated files into Repo-B
+      # Commit & push to Repo-B
       # -----------------------------
-      - name: Copy generated files
-        if: steps.changes.outputs.changed == 'true'
-        run: |
-          cp -r generated-manpages/*.1  repo-b/docs/catgen1/
-
-      # -----------------------------
-      # Commit & push changes
-      # -----------------------------
-      - name: Commit and push changes
+      - name: Commit and push changes (Repo-B)
         if: steps.changes.outputs.changed == 'true'
         run: |
           cd repo-b
-          git config user.name "MDFazil"
-          git config user.email "fakrudeenfazil@gmail.com"
-          git add .
-          git commit -m "Auto-generate manpages from Repo-A" || exit 0
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add docs/catgen1
+          git commit -m "Auto-generate manpages from mvsutil-ua-test" || exit 0
           git push origin "$BRANCH_NAME"
 
       # -----------------------------
-      # Create PR to dev
+      # Create PR in Repo-B → main
       # -----------------------------
-      - name: Create Pull Request
+      - name: Create Pull Request in mvsutil-test
         if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.REPO_B_TOKEN }}
-          repository: ORG/Repo-B
-          base: dev
+          path: repo-b
+          base: main
           head: ${{ env.BRANCH_NAME }}
           title: "Auto-generated manpages"
           body: |
             This PR was automatically generated.
 
-            - Source: Repo-A main merge
-            - Generator: folder-based Python script
+            - Source repo: mvsutil-ua-test
+            - Trigger: markdown change on main
+            - Target repo: mvsutil-test
             - Output: manpages (.1)
