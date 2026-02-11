@@ -12,6 +12,7 @@
 
 ## SYNOPSIS
 
+
 ```text
 dcat [-bdhjJlv] DATASET
 
