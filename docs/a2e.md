@@ -7,6 +7,7 @@
 ## NAME
 
 `a2` - Convert file from ASCII to
+
 <br />
 
 ## SYNOPSIS
