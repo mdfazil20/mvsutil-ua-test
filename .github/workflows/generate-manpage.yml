@@ -94,18 +94,22 @@ jobs:
           git commit -m "Auto-generate manpages from mvsutil-ua-test" || exit 0
           git push origin "$BRANCH_NAME"
 
-      - name: Create Pull Request
+      # -----------------------------
+      # Create PR in Repo-B → main
+      # -----------------------------
+      - name: Create Pull Request in mvsutil-test
         if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.REPO_B_TOKEN }}
           path: repo-b
           base: main
-          branch: ${{ env.BRANCH_NAME }}
+          head: ${{ env.BRANCH_NAME }}
           title: "Auto-generated manpages"
           body: |
             This PR was automatically generated.
 
-            - Source: markdown changes from mvsutil-ua-test
-            - Branch: ${{ env.BRANCH_NAME }}
-            - Target: main
+            - Source repo: mvsutil-ua-test
+            - Trigger: markdown change on main
+            - Target repo: mvsutil-test
+            - Output: manpages (.1)
