@@ -44,7 +44,7 @@ jobs:
 
       - name: Trigger mvsutil-deploy workflow
         run: |
-          curl -X POST https://api.github.com/repos/<YOUR-USERNAME>/mvsutil-deploy/dispatches \
+          curl -X POST https://api.github.com/repos/mdfazil20/mvsutil-deploy/dispatches \
           -H "Accept: application/vnd.github+json" \
           -H "Authorization: token ${{ secrets.ArtifactoryAccessToken }}" \
           -d '{
