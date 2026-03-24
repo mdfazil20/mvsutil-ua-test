@@ -58,31 +58,55 @@ jobs:
           echo "Changed files:"
           echo "${{ steps.files.outputs.all_changed_files }}"
 
-      - name: Convert changed MD files to manpages
+      - name: Convert changed MD files to manpages (via temp dir)
         run: |
-          TEMP_DIR="temp_md"
-          mkdir -p $TEMP_DIR
+          TEMP_MD="temp_md"
+          TEMP_OUT="temp_out"
 
-          echo "Preparing temp directory..."
+          mkdir -p $TEMP_MD
+          mkdir -p $TEMP_OUT
+
+          echo "==== Preparing temp input ===="
+
+          echo "${{ steps.files.outputs.all_changed_files }}" | tr ' ' '\n' > files.txt
+
+          cat files.txt
 
           # Copy only changed MD files
-          for file in ${{ steps.files.outputs.all_changed_files }}; do
+          while read file; do
             if [[ "$file" == zoau-core-manpage/*.md ]]; then
               echo "Copying $file"
-              cp "$file" "$TEMP_DIR/"
+              cp "$file" "$TEMP_MD/"
             fi
-          done
+          done < files.txt
 
-          echo "Files in temp dir:"
-          ls -l $TEMP_DIR
+          echo "==== Temp MD files ===="
+          ls -l $TEMP_MD || true
 
-          # Run script with folder input
+          # Exit if nothing copied
+          if [ -z "$(ls -A $TEMP_MD 2>/dev/null)" ]; then
+            echo "No files to process. Exiting."
+            exit 0
+          fi
+
+          echo "==== Running conversion ===="
+
           python3 scripts/md_to_manpage.py \
-            -i $TEMP_DIR \
-            -o mvsutil/docs/C/cat1
+            -i $TEMP_MD \
+            -o $TEMP_OUT
+
+          echo "==== Generated files ===="
+          ls -l $TEMP_OUT
+
+          echo "==== Copying to target repo ===="
+
+          cp -r $TEMP_OUT/* mvsutil/docs/C/cat1/
+
+          echo "==== Final target contents ===="
+          ls -l mvsutil/docs/C/cat1
 
           # Cleanup
-          rm -rf $TEMP_DIR
+          rm -rf $TEMP_MD $TEMP_OUT files.txt
 
       - name: Commit & Push changes
         run: |
