@@ -7,6 +7,12 @@ on:
       - main
     paths:
       - 'zoau-core-manpage/**/*.md'
+      
+  # push: 
+  # branches: 
+  # - main 
+  # paths: 
+  # - 'zoau-core-manpage/**/*.md'
 
 env:
   TARGET_REPO: mdfazil20/mvsutil-test
@@ -33,6 +39,7 @@ jobs:
           repository: ${{ env.TARGET_REPO }}
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           path: ${{ env.TARGET_PATH }}
+          # github-server-url: https://github.ibm.com
 
       - name: Get changed MD files
         id: files
