@@ -7,120 +7,81 @@ on:
       - main
     paths:
       - 'zoau-core-manpage/**/*.md'
+      
+  # push: 
+  # branches: 
+  # - main 
+  # paths: 
+  # - 'zoau-core-manpage/**/*.md'
+
+env:
+  TARGET_REPO: mdfazil20/mvsutil-test
+  TARGET_PATH: mvsutil
+  TARGET_BRANCH_BASE: main
+  OUTPUT_DIR: docs/C/cat1
+  SOURCE_MD_PATH: zoau-core-manpage/**/*.md
+  GIT_USER_NAME: github-actions
+  GIT_USER_EMAIL: github-actions@github.com
+  BRANCH_PREFIX: auto-manpage-
 
 jobs:
   generate-manpages:
-    if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
-      (github.event_name == 'push')
-
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-      # =========================
-      # Checkout source repo (mvsutil-ua)
-      # =========================
-      - name: Checkout mvsutil-ua
+      - name: Checkout source repo
         uses: actions/checkout@v4
 
-      # =========================
-      # Checkout target repo (mvsutil)
-      # =========================
-      - name: Checkout mvsutil
+      - name: Checkout target repo
         uses: actions/checkout@v4
         with:
-          repository: mdfazil20/mvsutil-test
+          repository: ${{ env.TARGET_REPO }}
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
-          path: mvsutil
+          path: ${{ env.TARGET_PATH }}
+          # github-server-url: https://github.ibm.com
 
-      # =========================
-      # Debug workspace (optional)
-      # =========================
-      - name: Debug workspace
-        run: |
-          echo "==== CURRENT DIR ===="
-          pwd
-
-          echo "==== ROOT CONTENT ===="
-          ls -la
-
-          echo "==== MVSUTIL FOLDER ===="
-          ls -la mvsutil
-
-      # =========================
-      # Get changed markdown files
-      # =========================
       - name: Get changed MD files
         id: files
         uses: tj-actions/changed-files@v44
         with:
-          files: |
-            zoau-core-manpage/**/*.md
+          files: ${{ env.SOURCE_MD_PATH }}
 
-      - name: Debug changed files
-        run: |
-          echo "Changed files:"
-          echo "${{ steps.files.outputs.all_changed_files }}"
-
-      # =========================
-      # Convert MD → manpages via temp dirs
-      # =========================
-      - name: Convert changed MD files to manpages
+      - name: Convert MD to manpages
         run: |
           TEMP_MD="temp_md"
           TEMP_OUT="temp_out"
 
-          mkdir -p $TEMP_MD
-          mkdir -p $TEMP_OUT
-
-          echo "==== Preparing temp input ===="
+          mkdir -p "$TEMP_MD" "$TEMP_OUT"
 
           echo "${{ steps.files.outputs.all_changed_files }}" | tr ' ' '\n' > files.txt
-          cat files.txt
 
-          # Copy only changed MD files
           while read file; do
             if [[ "$file" == zoau-core-manpage/*.md ]]; then
-              echo "Copying $file"
               cp "$file" "$TEMP_MD/"
             fi
           done < files.txt
 
-          echo "==== Temp MD files ===="
-          ls -l $TEMP_MD || true
-
-          # Exit if nothing to process
           if [ -z "$(ls -A $TEMP_MD 2>/dev/null)" ]; then
             echo "No files to process. Exiting."
             exit 0
           fi
 
-          echo "==== Running conversion ===="
-
           python3 scripts/md_to_manpage.py \
-            -i $TEMP_MD \
-            -o $TEMP_OUT
+            -i "$TEMP_MD" \
+            -o "$TEMP_OUT"
 
-          echo "==== Generated files ===="
-          ls -l $TEMP_OUT
+          cp -r "$TEMP_OUT"/* "${{ env.TARGET_PATH }}/${{ env.OUTPUT_DIR }}/"
 
-          echo "==== Copying to target repo ===="
+          rm -rf "$TEMP_MD" "$TEMP_OUT" files.txt
 
-          cp -r $TEMP_OUT/* mvsutil/docs/C/cat1/
-
-          echo "==== Final target contents ===="
-          ls -l mvsutil/docs/C/cat1
-
-          # Cleanup
-          rm -rf $TEMP_MD $TEMP_OUT files.txt
-
-      - name: Create PR in mvsutil
+      - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
-          path: mvsutil
+          path: ${{ env.TARGET_PATH }}
           commit-message: "Auto manpage generation"
-          branch: auto-manpage-${{ github.run_id }}
+          branch: ${{ env.BRANCH_PREFIX }}${{ github.run_id }}
           title: "Auto manpage generation"
           body: "Auto-generated manpages from mvsutil-ua"
-          base: main
+          base: ${{ env.TARGET_BRANCH_BASE }}
