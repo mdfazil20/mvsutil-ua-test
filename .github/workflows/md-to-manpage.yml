@@ -29,9 +29,22 @@ jobs:
       - name: Checkout mvsutil
         uses: actions/checkout@v4
         with:
-          repository: mdfazil20/mvsutil-test   # ✅ FIXED
+          repository: mdfazil20/mvsutil-test
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           path: mvsutil
+      - name: Debug workspace after checkout
+        run: |
+          echo "==== CURRENT DIR ===="
+          pwd
+
+          echo "==== ROOT CONTENT ===="
+          ls -la
+
+          echo "==== MVSUTIL FOLDER ===="
+          ls -la mvsutil
+
+          echo "==== FULL TREE (2 levels) ===="
+          find . -maxdepth 2 -type d
 
       - name: Get changed MD files
         id: files
@@ -45,18 +58,10 @@ jobs:
           echo "Changed files:"
           echo "${{ steps.files.outputs.all_changed_files }}"
 
-      - name: Exit if no MD files changed
-        run: |
-          if [ -z "${{ steps.files.outputs.all_changed_files }}" ]; then
-            echo "No relevant MD files changed. Exiting."
-            exit 0
-          fi
-
       - name: Convert changed MD files to manpages
         run: |
           TEMP_DIR="temp_md"
           mkdir -p $TEMP_DIR
-          mkdir -p mvsutil/mvsutil-test/docs/C/cat1
 
           echo "Preparing temp directory..."
 
