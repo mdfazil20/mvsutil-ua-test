@@ -5,7 +5,7 @@
 <br />
 
 ## NAME
-`apfadm` - Authorized Program Facility (APF). . . 
+`apfadm` - Authorized Program Facility of IBM
 
 <br />
 
