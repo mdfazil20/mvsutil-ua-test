@@ -5,9 +5,14 @@ on:
     types: [closed]
     branches:
       - main
+    paths:
+      - 'zoau-core-manpage/**/*.md'
+
   push:
     branches:
       - main
+    paths:
+      - 'zoau-core-manpage/**/*.md'
 
 jobs:
   generate-manpages:
