@@ -12,10 +12,10 @@
 ## SYNOPSIS
 
 ```text
-a2e [-dFhqv] [-f <source_codepage>] [-t <dest_codepage>] <FILE>
+a2e [-dFhqv] [-f <source_codepage>] [-t <dest_codepage>] <FILE> 
 
 -d
-    Print out debug messages.
+    Print out debug message
 
 -F
     Force conversion regardless of file tag.
