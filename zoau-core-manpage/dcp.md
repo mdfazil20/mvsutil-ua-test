@@ -6,7 +6,7 @@
 
 ## NAME
 
-`dcp` - Copy datasets and files and my details
+`dcp` - Copy datasets and files and my details if the constitution
 
 <br />
 
