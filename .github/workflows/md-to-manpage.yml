@@ -135,46 +135,13 @@ jobs:
           # Cleanup
           rm -rf $TEMP_MD $TEMP_OUT files.txt
 
-      # =========================
-      # Commit & Push
-      # =========================
-      - name: Commit & Push changes
-        run: |
-          cd mvsutil
-
-          echo "==== BEFORE ADD ===="
-          git status
-
-          git add docs/C/cat1
-
-          echo "==== AFTER ADD ===="
-          git status
-
-          echo "==== STAGED DIFF ===="
-          git diff --cached || true
-
-          # Skip if no changes
-          if git diff --cached --quiet; then
-            echo "No changes to commit. Skipping push."
-            exit 0
-          fi
-
-          git commit -m "${{ github.event.pull_request.title || 'Auto manpage generation' }}"
-
-          echo "==== AFTER COMMIT ===="
-          git status
-
-          git push origin $BRANCH_NAME
-
-      # =========================
-      # Create Pull Request
-      # =========================
       - name: Create PR in mvsutil
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           path: mvsutil
-          branch: ${{ env.BRANCH_NAME }}
-          title: ${{ github.event.pull_request.title || 'Auto manpage generation' }}
+          commit-message: "Auto manpage generation"
+          branch: auto-manpage-${{ github.run_id }}
+          title: "Auto manpage generation"
           body: "Auto-generated manpages from mvsutil-ua"
           base: main
