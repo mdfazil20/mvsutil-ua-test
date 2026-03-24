@@ -6,7 +6,7 @@
 
 ## NAME
 
-`dcat` - Print out a non-VSAM.
+`dcat` - Print out a non-VSAM nd VSAM
 
 <br />
 
