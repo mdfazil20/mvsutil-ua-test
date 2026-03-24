@@ -113,14 +113,32 @@ jobs:
           cd mvsutil
 
           BRANCH_NAME="auto-manpage-${{ github.run_id }}"
-
           git checkout -b $BRANCH_NAME
 
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
+          echo "==== BEFORE ADD ===="
+          git status
+
           git add docs/C/cat1
-          git commit -m "${{ github.event.pull_request.title || 'Auto manpage generation' }}" || echo "No changes"
+
+          echo "==== AFTER ADD ===="
+          git status
+
+          echo "==== STAGED DIFF ===="
+          git diff --cached || true
+
+          # Only commit if there are real changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit. Skipping push."
+            exit 0
+          fi
+
+          git commit -m "${{ github.event.pull_request.title || 'Auto manpage generation' }}"
+
+          echo "==== AFTER COMMIT ===="
+          git status
 
           git push origin $BRANCH_NAME
 
