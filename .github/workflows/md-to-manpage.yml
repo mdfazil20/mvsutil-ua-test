@@ -1,0 +1,87 @@
+name: Generate Manpages and Raise PR
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main   # change to development later
+  push:
+    branches:
+      - main   # for testing
+
+jobs:
+  generate-manpages:
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'push')
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout mvsutil-ua
+        uses: actions/checkout@v4
+
+      - name: Checkout mvsutil
+        uses: actions/checkout@v4
+        with:
+          repository: mdfazil20/mvsutil
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          path: mvsutil
+
+      - name: Get changed MD files
+        id: files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            zoau-core-manpage/**/*.md
+
+      - name: Debug changed files
+        run: |
+          echo "Changed files:"
+          echo "${{ steps.files.outputs.all_changed_files }}"
+
+      - name: Exit if no MD files changed
+        run: |
+          if [ -z "${{ steps.files.outputs.all_changed_files }}" ]; then
+            echo "No relevant MD files changed. Exiting."
+            exit 0
+          fi
+
+      - name: Convert changed MD files to manpages
+        run: |
+          mkdir -p mvsutil/docs/C/cat1
+
+          for file in ${{ steps.files.outputs.all_changed_files }}; do
+            if [[ "$file" == zoau-core-manpage/*.md ]]; then
+              echo "Processing $file"
+              python3 scripts/md_to_manpage.py \
+                "$file" \
+                "mvsutil/docs/C/cat1"
+            fi
+          done
+
+      - name: Commit & Push changes
+        run: |
+          cd mvsutil
+
+          BRANCH_NAME="auto-manpage-${{ github.run_id }}"
+
+          git checkout -b $BRANCH_NAME
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add docs/C/cat1
+          git commit -m "${{ github.event.pull_request.title || 'Auto manpage generation' }}" || echo "No changes"
+
+          git push origin $BRANCH_NAME
+
+      - name: Create PR in mvsutil
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          path: mvsutil
+          branch: auto-manpage-${{ github.run_id }}
+          title: ${{ github.event.pull_request.title || 'Auto manpage generation' }}
+          body: "Auto-generated manpages from mvsutil-ua"
+          base: main
