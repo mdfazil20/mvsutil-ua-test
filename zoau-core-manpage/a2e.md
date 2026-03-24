@@ -12,7 +12,7 @@
 ## SYNOPSIS
 
 ```text
-a2e [-dFhqv] [-f <source_codepage>] [-t <dest_codepage>] <FILE>
+a2e [-dFhqv] [-f <source_codepage>] [-t <dest_codepage>] <FILE> Fazil
 
 -d
     Print out debug messages.
