@@ -8,8 +8,6 @@
 
 `apfadm` - Authorized Program Facility (APF).
 
-
-
 <br />
 
 ## SYNOPSIS

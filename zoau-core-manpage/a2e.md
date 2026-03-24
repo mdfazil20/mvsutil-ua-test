@@ -2,7 +2,6 @@
 <!-- This allows HTML <br /> for explicit line breaks. -->
 # a2e(1)
 
-
 <br />
 
 ## NAME
