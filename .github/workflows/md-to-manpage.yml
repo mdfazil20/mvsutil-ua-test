@@ -23,16 +23,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # =========================
+      # Checkout source repo (mvsutil-ua)
+      # =========================
       - name: Checkout mvsutil-ua
         uses: actions/checkout@v4
 
+      # =========================
+      # Checkout target repo (mvsutil)
+      # =========================
       - name: Checkout mvsutil
         uses: actions/checkout@v4
         with:
           repository: mdfazil20/mvsutil-test
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           path: mvsutil
-      - name: Debug workspace after checkout
+
+      # =========================
+      # Debug workspace (optional)
+      # =========================
+      - name: Debug workspace
         run: |
           echo "==== CURRENT DIR ===="
           pwd
@@ -43,9 +53,9 @@ jobs:
           echo "==== MVSUTIL FOLDER ===="
           ls -la mvsutil
 
-          echo "==== FULL TREE (2 levels) ===="
-          find . -maxdepth 2 -type d
-
+      # =========================
+      # Get changed markdown files
+      # =========================
       - name: Get changed MD files
         id: files
         uses: tj-actions/changed-files@v44
@@ -58,7 +68,25 @@ jobs:
           echo "Changed files:"
           echo "${{ steps.files.outputs.all_changed_files }}"
 
-      - name: Convert changed MD files to manpages (via temp dir)
+      # =========================
+      # Create branch FIRST
+      # =========================
+      - name: Prepare branch in mvsutil
+        run: |
+          cd mvsutil
+
+          BRANCH_NAME="auto-manpage-${{ github.run_id }}"
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+          git checkout -b $BRANCH_NAME
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      # =========================
+      # Convert MD → manpages via temp dirs
+      # =========================
+      - name: Convert changed MD files to manpages
         run: |
           TEMP_MD="temp_md"
           TEMP_OUT="temp_out"
@@ -69,7 +97,6 @@ jobs:
           echo "==== Preparing temp input ===="
 
           echo "${{ steps.files.outputs.all_changed_files }}" | tr ' ' '\n' > files.txt
-
           cat files.txt
 
           # Copy only changed MD files
@@ -83,7 +110,7 @@ jobs:
           echo "==== Temp MD files ===="
           ls -l $TEMP_MD || true
 
-          # Exit if nothing copied
+          # Exit if nothing to process
           if [ -z "$(ls -A $TEMP_MD 2>/dev/null)" ]; then
             echo "No files to process. Exiting."
             exit 0
@@ -108,15 +135,12 @@ jobs:
           # Cleanup
           rm -rf $TEMP_MD $TEMP_OUT files.txt
 
+      # =========================
+      # Commit & Push
+      # =========================
       - name: Commit & Push changes
         run: |
           cd mvsutil
-
-          BRANCH_NAME="auto-manpage-${{ github.run_id }}"
-          git checkout -b $BRANCH_NAME
-
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
 
           echo "==== BEFORE ADD ===="
           git status
@@ -129,7 +153,7 @@ jobs:
           echo "==== STAGED DIFF ===="
           git diff --cached || true
 
-          # Only commit if there are real changes
+          # Skip if no changes
           if git diff --cached --quiet; then
             echo "No changes to commit. Skipping push."
             exit 0
@@ -142,12 +166,15 @@ jobs:
 
           git push origin $BRANCH_NAME
 
+      # =========================
+      # Create Pull Request
+      # =========================
       - name: Create PR in mvsutil
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           path: mvsutil
-          branch: auto-manpage-${{ github.run_id }}
+          branch: ${{ env.BRANCH_NAME }}
           title: ${{ github.event.pull_request.title || 'Auto manpage generation' }}
           body: "Auto-generated manpages from mvsutil-ua"
           base: main
