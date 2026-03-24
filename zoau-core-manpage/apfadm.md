@@ -5,14 +5,14 @@
 <br />
 
 ## NAME
-`apfadm` - Authorized Program Facility (APF)
+`apfadm` - Authorized Program Facility (APF). . . 
 
 <br />
 
 ## SYNOPSIS
 
 ```text
-apfadm [-dfhijJlv] [-[AD] <ds,vol> | <ds,sms> | <ds>]* [-M <marker>] Fazil
+apfadm [-dfhijJlv] [-[AD] <ds,vol> | <ds,sms> | <ds>]* [-M <marker>]
        [-[PR] <dataset> ] [-F [DYNAMIC|STATIC]]
 
 -A/-D <ds,vol | ds,SMS | ds>
