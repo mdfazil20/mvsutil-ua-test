@@ -69,21 +69,6 @@ jobs:
           echo "${{ steps.files.outputs.all_changed_files }}"
 
       # =========================
-      # Create branch FIRST
-      # =========================
-      - name: Prepare branch in mvsutil
-        run: |
-          cd mvsutil
-
-          BRANCH_NAME="auto-manpage-${{ github.run_id }}"
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-
-          git checkout -b $BRANCH_NAME
-
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-
-      # =========================
       # Convert MD → manpages via temp dirs
       # =========================
       - name: Convert changed MD files to manpages
