@@ -4,10 +4,10 @@ on:
   pull_request:
     types: [closed]
     branches:
-      - main   # change to development later
+      - main
   push:
     branches:
-      - main   # for testing
+      - main
 
 jobs:
   generate-manpages:
@@ -24,7 +24,7 @@ jobs:
       - name: Checkout mvsutil
         uses: actions/checkout@v4
         with:
-          repository: mdfazil20/mvsutil
+          repository: mdfazil20/mvsutil-test   # ✅ FIXED
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           path: mvsutil
 
