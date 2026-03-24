@@ -51,7 +51,7 @@ jobs:
         run: |
           TEMP_DIR="temp_md"
           mkdir -p $TEMP_DIR
-          mkdir -p mvsutil/docs/C/cat1
+          mkdir -p mvsutil/mvsutil-test/docs/C/cat1
 
           echo "Preparing temp directory..."
 
@@ -69,7 +69,7 @@ jobs:
           # Run script with folder input
           python3 scripts/md_to_manpage.py \
             -i $TEMP_DIR \
-            -o mvsutil/docs/C/cat1
+            -o mvsutil/mvsutil-test/docs/C/cat1
 
           # Cleanup
           rm -rf $TEMP_DIR
