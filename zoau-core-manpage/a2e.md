@@ -3,7 +3,6 @@
 # a2e(1)
 
 <br />
-
 ## NAME
 
 `a2` - Convert file from ASCII to

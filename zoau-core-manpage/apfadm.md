@@ -5,7 +5,6 @@
 <br />
 
 ## NAME
-
 `apfadm` - Authorized Program Facility (APF).
 
 <br />

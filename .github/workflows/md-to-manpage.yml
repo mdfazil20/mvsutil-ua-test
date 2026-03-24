@@ -49,16 +49,30 @@ jobs:
 
       - name: Convert changed MD files to manpages
         run: |
+          TEMP_DIR="temp_md"
+          mkdir -p $TEMP_DIR
           mkdir -p mvsutil/docs/C/cat1
 
+          echo "Preparing temp directory..."
+
+          # Copy only changed MD files
           for file in ${{ steps.files.outputs.all_changed_files }}; do
             if [[ "$file" == zoau-core-manpage/*.md ]]; then
-              echo "Processing $file"
-              python3 scripts/md_to_manpage.py \
-                "$file" \
-                "mvsutil/docs/C/cat1"
+              echo "Copying $file"
+              cp "$file" "$TEMP_DIR/"
             fi
           done
+
+          echo "Files in temp dir:"
+          ls -l $TEMP_DIR
+
+          # Run script with folder input
+          python3 scripts/md_to_manpage.py \
+            -i $TEMP_DIR \
+            -o mvsutil/docs/C/cat1
+
+          # Cleanup
+          rm -rf $TEMP_DIR
 
       - name: Commit & Push changes
         run: |
