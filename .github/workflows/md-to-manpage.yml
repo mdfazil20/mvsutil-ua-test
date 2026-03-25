@@ -14,8 +14,8 @@ env:
   TARGET_BRANCH_BASE: main
   OUTPUT_DIR: docs/C/cat1
   SOURCE_MD_PATH: zoau-core-manpage/**/*.md
-  GIT_USER_NAME: github-actions
-  GIT_USER_EMAIL: github-actions@github.com
+  GIT_USER_NAME: zoauser
+  GIT_USER_EMAIL: zoauser@us.ibm.com
   BRANCH_PREFIX: auto-manpage-
 
 jobs:
@@ -40,7 +40,6 @@ jobs:
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           path: ${{ env.TARGET_PATH }}
 
-      # 🔁 Replaces tj-actions/changed-files
       - name: Get changed MD files
         id: files
         run: |
@@ -92,7 +91,6 @@ jobs:
 
           rm -rf "$TEMP_MD" "$TEMP_OUT" files.txt
 
-      # 🔁 Replaces peter-evans/create-pull-request
       - name: Commit and Push changes
         run: |
           cd ${{ env.TARGET_PATH }}
