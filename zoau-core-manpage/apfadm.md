@@ -5,7 +5,7 @@
 <br />
 
 ## NAME
-`apfadm` - Authorized Program Facility
+`apfadm` - Authorized Program Facility of the 
 
 <br />
 
