@@ -7,12 +7,6 @@ on:
       - main
     paths:
       - 'zoau-core-manpage/**/*.md'
-      
-  # push: 
-  # branches: 
-  # - main 
-  # paths: 
-  # - 'zoau-core-manpage/**/*.md'
 
 env:
   TARGET_REPO: mdfazil20/mvsutil-test
@@ -29,6 +23,10 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - name: Checkout source repo
         uses: actions/checkout@v4
@@ -39,13 +37,17 @@ jobs:
           repository: ${{ env.TARGET_REPO }}
           token: ${{ secrets.REPO_ACCESS_TOKEN }}
           path: ${{ env.TARGET_PATH }}
-          # github-server-url: https://github.ibm.com
 
+      # 🔁 Replaces tj-actions/changed-files
       - name: Get changed MD files
         id: files
-        uses: tj-actions/changed-files@v44
-        with:
-          files: ${{ env.SOURCE_MD_PATH }}
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+
+          git diff --name-only \
+            origin/${{ github.event.pull_request.base.ref }} \
+            ${{ github.sha }} \
+            | grep '^zoau-core-manpage/.*\.md$' > files.txt || true
 
       - name: Convert MD to manpages
         run: |
@@ -54,7 +56,10 @@ jobs:
 
           mkdir -p "$TEMP_MD" "$TEMP_OUT"
 
-          echo "${{ steps.files.outputs.all_changed_files }}" | tr ' ' '\n' > files.txt
+          if [ ! -s files.txt ]; then
+            echo "No files to process. Exiting."
+            exit 0
+          fi
 
           while read file; do
             if [[ "$file" == zoau-core-manpage/*.md ]]; then
@@ -75,13 +80,37 @@ jobs:
 
           rm -rf "$TEMP_MD" "$TEMP_OUT" files.txt
 
+      # 🔁 Replaces peter-evans/create-pull-request
+      - name: Commit and Push changes
+        run: |
+          cd ${{ env.TARGET_PATH }}
+
+          git config user.name "${{ env.GIT_USER_NAME }}"
+          git config user.email "${{ env.GIT_USER_EMAIL }}"
+
+          BRANCH_NAME=${{ env.BRANCH_PREFIX }}${{ github.run_id }}
+
+          git checkout -b $BRANCH_NAME
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Auto manpage generation"
+          git push origin $BRANCH_NAME
+
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
-          path: ${{ env.TARGET_PATH }}
-          commit-message: "Auto manpage generation"
-          branch: ${{ env.BRANCH_PREFIX }}${{ github.run_id }}
-          title: "Auto manpage generation"
-          body: "Auto-generated manpages from mvsutil-ua"
-          base: ${{ env.TARGET_BRANCH_BASE }}
+        run: |
+          cd ${{ env.TARGET_PATH }}
+
+          gh pr create \
+            --title "Auto manpage generation" \
+            --body "Auto-generated manpages from mvsutil-ua" \
+            --base ${{ env.TARGET_BRANCH_BASE }} \
+            --head $BRANCH_NAME
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
