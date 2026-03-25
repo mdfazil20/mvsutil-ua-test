@@ -42,12 +42,22 @@ jobs:
       - name: Get changed MD files
         id: files
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}
+          echo "Base SHA: ${{ github.event.pull_request.base.sha }}"
+          echo "Merge SHA: ${{ github.event.pull_request.merge_commit_sha }}"
 
           git diff --name-only \
-            origin/${{ github.event.pull_request.base.ref }} \
-            ${{ github.sha }} \
+            ${{ github.event.pull_request.base.sha }} \
+            ${{ github.event.pull_request.merge_commit_sha }} \
             | grep '^zoau-core-manpage/.*\.md$' > files.txt || true
+
+          echo "Changed files:"
+          cat files.txt || true
+
+          if [ ! -s files.txt ]; then
+            echo "NO_FILES=true" >> $GITHUB_ENV
+          else
+            echo "NO_FILES=false" >> $GITHUB_ENV
+          fi
 
       - name: Convert MD to manpages
         run: |
