@@ -5,7 +5,7 @@
 <br />
 ## NAME
 
-`a2` - Convert file from this to that that or this
+`a2` - Convert file from this to that that or this this ot that
 
 <br />
 
